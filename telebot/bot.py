@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import flask
+from flask import Flask
 import telebot
 import config
 import dbworker
+import time
+from flask import request, abort
 from telebot import types
 
 WEBHOOK_HOST = '34.77.212.75'
@@ -17,6 +19,20 @@ keyboard1.row('/start','/reset')
 keyboard2 = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 button_geo = types.KeyboardButton(text='Отправить местопооложение', request_location=True)
 keyboard2.add(button_geo)
+
+app = Flask(__name__)
+
+@app.route(f'/{PATH}', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+
+    else:
+        abort(403)
 
 # Начало диалога
 @bot.message_handler(commands=["start"])
@@ -77,32 +93,14 @@ def user_wish_address(message):
 
 if __name__ == "__main__":
     bot.remove_webhook()
-    time.sleep()
+    time.sleep(1)
     bot.set_webhook(
              url=WEBHOOK_URL,
-             certificate=open('nginx-selfsigned.crt', , 'r')
+             certificate=open('./nginx-selfsigned.crt','r')
              )
+    print(bot.get_webhook_info())
     app.run(host='127.0.0.1', port=5000, debug=True)
 
-
-    app = Flask(name)
-    bot = telebot.TeleBot(config.TOKEN)
-
-
-    @app.route(f'/{PATH}', methods=['POST'])
-    def webhook():
-    """
-    Function process webhook call
-    """
-        if request.headers.get('content-type') == 'application/json':
-
-            json_string = request.get_data().decode('utf-8')
-            update = telebot.types.Update.de_json(json_string)
-            bot.process_new_updates([update])
-            return ''
-
-        else:
-            abort(403)
 
 
  
